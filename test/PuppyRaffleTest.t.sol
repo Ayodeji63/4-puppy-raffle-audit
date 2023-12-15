@@ -73,11 +73,15 @@ contract PuppyRaffleTest is Test {
         players[2] = playerOne;
         vm.expectRevert("PuppyRaffle: Duplicate player");
         puppyRaffle.enterRaffle{value: entranceFee * 3}(players);
+        vm.prank(playerOne);
+        uint256 playersCount = puppyRaffle.getActivePlayerIndex(playerTwo);
+        console.log(playersCount);
     }
-
+    // formar
     //////////////////////
     /// Refund         ///
     /////////////////////
+
     modifier playerEntered() {
         address[] memory players = new address[](1);
         players[0] = playerOne;
@@ -208,9 +212,20 @@ contract PuppyRaffleTest is Test {
         vm.roll(block.number + 1);
 
         uint256 expectedPrizeAmount = ((entranceFee * 4) * 20) / 100;
-
         puppyRaffle.selectWinner();
+        vm.prank(playerOne);
         puppyRaffle.withdrawFees();
         assertEq(address(feeAddress).balance, expectedPrizeAmount);
+    }
+
+    function testAnyoneCanWithdrawFees() public playersEntered {
+        vm.warp(block.timestamp + duration + 1);
+        vm.roll(block.number + 1);
+
+        uint256 expectedPrizeAmount = ((entranceFee * 4) * 20) / 100;
+        puppyRaffle.selectWinner();
+        vm.prank(playerOne);
+        puppyRaffle.withdrawFees();
+        assertEq(address(playerOne).balance, expectedPrizeAmount);
     }
 }
